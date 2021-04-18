@@ -10,6 +10,7 @@ if len(sys.argv) != 4:
 
 stock_name, window_size, episode_count = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 
+cash_in_hand = 5000
 agent = Agent(window_size)
 data = getStockDataVec(stock_name)
 l = len(data) - 1
@@ -28,14 +29,16 @@ for e in range(episode_count + 1):
 		next_state = getState(data, t + 1, window_size + 1)
 		reward = 0
 
-		if action == 1: # buy
+		if action == 1 and cash_in_hand >= data[t]: # buy
 			agent.inventory.append(data[t])
+			cash_in_hand -= data[t]
 			# print("Buy: " + formatPrice(data[t]))
 
 		elif action == 2 and len(agent.inventory) > 0: # sell
 			bought_price = agent.inventory.pop(0)
 			reward = max(data[t] - bought_price, 0)
 			total_profit += data[t] - bought_price
+			cash_in_hand += data[t]
 			# print("Sell: " + formatPrice(data[t]) + " | Profit: " + formatPrice(data[t] - bought_price))
 
 		done = True if t == l - 1 else False
@@ -44,7 +47,7 @@ for e in range(episode_count + 1):
 
 		if done:
 			print("--------------------------------")
-			print("Total Profit: " + formatPrice(total_profit))
+			print("Total Profit: " + formatPrice(total_profit)+ "| In hand: " + formatPrice(cash_in_hand))
 			print("--------------------------------")
 
 		agent.optimize()
